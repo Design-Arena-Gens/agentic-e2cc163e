@@ -1,0 +1,1909 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VideoShare - শর্ট ভিডিও শেয়ারিং প্ল্যাটফর্ম</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary-color: #fe2c55;
+            --secondary-color: #00f2ea;
+            --bg-color: #000000;
+            --card-bg: #121212;
+            --text-color: #ffffff;
+            --text-muted: #a0a0a0;
+            --border-color: #2a2a2a;
+            --success-color: #00ff88;
+            --warning-color: #ffaa00;
+        }
+
+        body.light-mode {
+            --bg-color: #ffffff;
+            --card-bg: #f8f8f8;
+            --text-color: #000000;
+            --text-muted: #666666;
+            --border-color: #e0e0e0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+            transition: background 0.3s ease;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin-bottom: 20px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .loading-text {
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        /* Auth Screen */
+        .auth-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+
+        .auth-screen.hidden {
+            display: none;
+        }
+
+        .auth-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .auth-logo {
+            text-align: center;
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .auth-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 30px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-muted);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .auth-tab.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            background: var(--bg-color);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-color);
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--primary-color), #ff4d7d);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .social-login {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .social-login-title {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .social-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 12px;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .social-btn:hover {
+            border-color: var(--primary-color);
+        }
+
+        /* Main App Container */
+        .app-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        .app-container.active {
+            display: block;
+        }
+
+        /* Video Feed */
+        .video-feed {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .video-feed::-webkit-scrollbar {
+            display: none;
+        }
+
+        .video-item {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            scroll-snap-align: start;
+            background: #000;
+        }
+
+        .video-placeholder {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.5) 100%);
+            pointer-events: none;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 50px 20px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .top-tabs {
+            display: flex;
+            gap: 20px;
+        }
+
+        .top-tab {
+            font-size: 18px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.6);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .top-tab.active {
+            color: white;
+            font-size: 20px;
+        }
+
+        .search-btn {
+            font-size: 24px;
+            cursor: pointer;
+            pointer-events: all;
+        }
+
+        /* Side Actions */
+        .side-actions {
+            position: absolute;
+            right: 15px;
+            bottom: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            pointer-events: all;
+        }
+
+        .action-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .action-icon.liked {
+            background: var(--primary-color);
+        }
+
+        .action-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .profile-pic {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border: 2px solid white;
+        }
+
+        .follow-btn-mini {
+            width: 24px;
+            height: 24px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -12px;
+            font-size: 16px;
+        }
+
+        /* Video Info */
+        .video-info {
+            position: absolute;
+            left: 15px;
+            bottom: 100px;
+            right: 80px;
+            z-index: 10;
+        }
+
+        .video-author {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .author-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .follow-btn-inline {
+            padding: 5px 15px;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            pointer-events: all;
+        }
+
+        .video-caption {
+            font-size: 14px;
+            color: white;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .video-hashtags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .hashtag {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .video-music {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .music-icon {
+            font-size: 16px;
+        }
+
+        .music-text {
+            font-size: 14px;
+            color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-icon {
+            font-size: 24px;
+            color: var(--text-muted);
+        }
+
+        .nav-item.active .nav-icon {
+            color: var(--text-color);
+        }
+
+        .nav-label {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .nav-item.active .nav-label {
+            color: var(--text-color);
+        }
+
+        .upload-btn {
+            width: 50px;
+            height: 35px;
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        /* Pages */
+        .page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            z-index: 50;
+            display: none;
+            overflow-y: auto;
+            padding-bottom: 60px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .page-header {
+            position: sticky;
+            top: 0;
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 10;
+        }
+
+        .back-btn {
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .page-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .header-btn {
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Profile Page */
+        .profile-cover {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .profile-info {
+            padding: 20px;
+            text-align: center;
+            margin-top: -50px;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            border: 4px solid var(--bg-color);
+        }
+
+        .profile-name {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .profile-username {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+
+        .profile-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 10px;
+            padding: 0 20px;
+            margin-bottom: 20px;
+        }
+
+        .profile-btn {
+            flex: 1;
+            padding: 12px;
+            background: var(--card-bg);
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
+            color: var(--primary-color);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .profile-btn.primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .profile-bio {
+            padding: 0 20px 20px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .profile-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .profile-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            font-size: 24px;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .profile-tab.active {
+            color: var(--text-color);
+            border-color: var(--primary-color);
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            padding: 2px;
+        }
+
+        .grid-video {
+            aspect-ratio: 9/16;
+            background: var(--card-bg);
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .grid-video-bg {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+
+        .grid-video-views {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Discover Page */
+        .discover-content {
+            padding: 20px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 15px;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 15px;
+            color: var(--text-color);
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .trending-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tag-item {
+            padding: 10px 20px;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tag-item:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* Notifications Page */
+        .notification-list {
+            padding: 10px;
+        }
+
+        .notification-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .notification-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-text {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .notification-action {
+            width: 60px;
+            height: 80px;
+            background: var(--card-bg);
+            border-radius: 5px;
+            flex-shrink: 0;
+        }
+
+        /* Upload Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            font-size: 28px;
+            cursor: pointer;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-color);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 16px;
+            color: var(--text-muted);
+        }
+
+        /* Comments Modal */
+        .comments-content {
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+        }
+
+        .comments-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .comment-item {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .comment-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .comment-content {
+            flex: 1;
+        }
+
+        .comment-author {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .comment-text {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .comment-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .comment-like {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .comment-input-area {
+            padding: 15px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+        }
+
+        .comment-input {
+            flex: 1;
+            padding: 12px 15px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        .comment-send {
+            padding: 12px 20px;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Admin Panel */
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-card-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-card-label {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .admin-section {
+            padding: 20px;
+        }
+
+        .admin-item {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-item-info {
+            flex: 1;
+        }
+
+        .admin-item-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .admin-item-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .admin-action-btn {
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: none;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-approve {
+            background: var(--success-color);
+            color: #000;
+        }
+
+        .btn-delete {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Settings Page */
+        .settings-section {
+            padding: 20px;
+        }
+
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .settings-label {
+            font-size: 16px;
+        }
+
+        .toggle-switch {
+            width: 50px;
+            height: 28px;
+            background: var(--border-color);
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: var(--primary-color);
+        }
+
+        .toggle-slider {
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(22px);
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 14px;
+            z-index: 300;
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: 30px 20px;
+            }
+
+            .modal-content {
+                padding: 20px;
+            }
+        }
+
+        /* Animations */
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .slide-up {
+            animation: slideUp 0.3s ease;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-logo">🎬</div>
+        <div class="loading-text">VideoShare</div>
+    </div>
+
+    <!-- Auth Screen -->
+    <div class="auth-screen" id="authScreen">
+        <div class="auth-container">
+            <div class="auth-logo">🎬</div>
+            <div class="auth-title">VideoShare</div>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')">লগইন</button>
+                <button class="auth-tab" onclick="switchAuthTab('register')">সাইন আপ</button>
+            </div>
+
+            <form class="auth-form active" id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <input type="text" class="form-input" placeholder="ইমেইল বা ফোন নম্বর" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" class="form-input" placeholder="পাসওয়ার্ড" required>
+                </div>
+                <button type="submit" class="btn-primary">লগইন করুন</button>
+            </form>
+
+            <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <input type="text" class="form-input" placeholder="পুরো নাম" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" class="form-input" placeholder="ইমেইল" required>
+                </div>
+                <div class="form-group">
+                    <input type="tel" class="form-input" placeholder="ফোন নম্বর" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" class="form-input" placeholder="পাসওয়ার্ড" required>
+                </div>
+                <button type="submit" class="btn-primary">সাইন আপ করুন</button>
+            </form>
+
+            <div class="social-login">
+                <div class="social-login-title">অথবা সোশ্যাল মিডিয়া দিয়ে</div>
+                <div class="social-buttons">
+                    <button class="social-btn" onclick="socialLogin('google')">🔍</button>
+                    <button class="social-btn" onclick="socialLogin('facebook')">📘</button>
+                    <button class="social-btn" onclick="socialLogin('apple')">🍎</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app-container" id="appContainer">
+        <!-- Video Feed -->
+        <div class="video-feed" id="videoFeed">
+            <!-- Video items will be generated here -->
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="navigateTo('home')">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-label">হোম</div>
+            </div>
+            <div class="nav-item" onclick="navigateTo('discover')">
+                <div class="nav-icon">🔍</div>
+                <div class="nav-label">আবিষ্কার</div>
+            </div>
+            <div class="nav-item" onclick="openUploadModal()">
+                <div class="upload-btn">➕</div>
+            </div>
+            <div class="nav-item" onclick="navigateTo('notifications')">
+                <div class="nav-icon">🔔</div>
+                <div class="nav-label">নোটিফিকেশন</div>
+            </div>
+            <div class="nav-item" onclick="navigateTo('profile')">
+                <div class="nav-icon">👤</div>
+                <div class="nav-label">প্রোফাইল</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Page -->
+    <div class="page" id="profilePage">
+        <div class="page-header">
+            <div class="back-btn" onclick="closePage('profile')">←</div>
+            <div class="page-title">প্রোফাইল</div>
+            <div class="header-actions">
+                <div class="header-btn" onclick="navigateTo('settings')">⚙️</div>
+            </div>
+        </div>
+        <div class="profile-cover"></div>
+        <div class="profile-info">
+            <div class="profile-avatar" id="profileAvatar">👤</div>
+            <div class="profile-name" id="profileName">ইউজার নেম</div>
+            <div class="profile-username" id="profileUsername">@username</div>
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="followingCount">256</div>
+                    <div class="stat-label">ফলোয়িং</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="followersCount">1.2K</div>
+                    <div class="stat-label">ফলোয়ার</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="likesCount">8.5K</div>
+                    <div class="stat-label">লাইক</div>
+                </div>
+            </div>
+        </div>
+        <div class="profile-actions">
+            <button class="profile-btn primary">প্রোফাইল এডিট করুন</button>
+            <button class="profile-btn">শেয়ার করুন</button>
+        </div>
+        <div class="profile-bio">
+            🎬 ভিডিও ক্রিয়েটর | 📍 ঢাকা, বাংলাদেশ<br>
+            ডেইলি কনটেন্ট শেয়ার করি ❤️
+        </div>
+        <div class="profile-tabs">
+            <div class="profile-tab active">📹</div>
+            <div class="profile-tab">❤️</div>
+            <div class="profile-tab">🔒</div>
+        </div>
+        <div class="video-grid" id="profileVideoGrid">
+            <!-- Profile videos will be generated here -->
+        </div>
+    </div>
+
+    <!-- Discover Page -->
+    <div class="page" id="discoverPage">
+        <div class="page-header">
+            <div class="back-btn" onclick="closePage('discover')">←</div>
+            <div class="page-title">আবিষ্কার করুন</div>
+        </div>
+        <div class="discover-content">
+            <input type="text" class="search-box" placeholder="ভিডিও, ইউজার বা হ্যাশট্যাগ খুঁজুন...">
+
+            <div class="section-title">🔥 ট্রেন্ডিং হ্যাশট্যাগ</div>
+            <div class="trending-tags">
+                <div class="tag-item">#ভাইরাল</div>
+                <div class="tag-item">#ট্রেন্ডিং</div>
+                <div class="tag-item">#মজার</div>
+                <div class="tag-item">#গান</div>
+                <div class="tag-item">#নাচ</div>
+                <div class="tag-item">#কমেডি</div>
+                <div class="tag-item">#বাংলাদেশ</div>
+                <div class="tag-item">#ফুড</div>
+            </div>
+
+            <div class="section-title">⭐ ট্রেন্ডিং ভিডিও</div>
+            <div class="video-grid" id="trendingVideoGrid">
+                <!-- Trending videos will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Page -->
+    <div class="page" id="notificationsPage">
+        <div class="page-header">
+            <div class="back-btn" onclick="closePage('notifications')">←</div>
+            <div class="page-title">নোটিফিকেশন</div>
+        </div>
+        <div class="notification-list" id="notificationList">
+            <!-- Notifications will be generated here -->
+        </div>
+    </div>
+
+    <!-- Settings Page -->
+    <div class="page" id="settingsPage">
+        <div class="page-header">
+            <div class="back-btn" onclick="closePage('settings')">←</div>
+            <div class="page-title">সেটিংস</div>
+        </div>
+        <div class="settings-section">
+            <div class="section-title">অ্যাপিয়ারেন্স</div>
+            <div class="settings-item">
+                <div class="settings-label">ডার্ক মোড</div>
+                <div class="toggle-switch active" id="darkModeToggle" onclick="toggleDarkMode()">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+
+            <div class="section-title" style="margin-top: 30px;">প্রাইভেসি</div>
+            <div class="settings-item">
+                <div class="settings-label">প্রাইভেট অ্যাকাউন্ট</div>
+                <div class="toggle-switch" onclick="toggleSetting(this)">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+            <div class="settings-item">
+                <div class="settings-label">কমেন্ট অন করুন</div>
+                <div class="toggle-switch active" onclick="toggleSetting(this)">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+
+            <div class="section-title" style="margin-top: 30px;">নোটিফিকেশন</div>
+            <div class="settings-item">
+                <div class="settings-label">পুশ নোটিফিকেশন</div>
+                <div class="toggle-switch active" onclick="toggleSetting(this)">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+            <div class="settings-item">
+                <div class="settings-label">লাইক নোটিফিকেশন</div>
+                <div class="toggle-switch active" onclick="toggleSetting(this)">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+
+            <div class="section-title" style="margin-top: 30px;">অ্যাডমিন</div>
+            <div class="settings-item" onclick="navigateTo('admin')">
+                <div class="settings-label">অ্যাডমিন প্যানেল</div>
+                <div>→</div>
+            </div>
+
+            <div class="section-title" style="margin-top: 30px;">অ্যাকাউন্ট</div>
+            <div class="settings-item" onclick="logout()">
+                <div class="settings-label" style="color: var(--primary-color);">লগআউট</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div class="page" id="adminPage">
+        <div class="page-header">
+            <div class="back-btn" onclick="closePage('admin')">←</div>
+            <div class="page-title">অ্যাডমিন প্যানেল</div>
+        </div>
+        <div class="admin-stats">
+            <div class="stat-card">
+                <div class="stat-card-value">1,234</div>
+                <div class="stat-card-label">মোট ভিডিও</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">5,678</div>
+                <div class="stat-card-label">মোট ইউজার</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">23</div>
+                <div class="stat-card-label">রিপোর্ট</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">12</div>
+                <div class="stat-card-label">পেন্ডিং</div>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <div class="section-title">রিপোর্টেড ভিডিও</div>
+            <div id="reportedVideos">
+                <!-- Admin items will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">ভিডিও আপলোড করুন</div>
+                <div class="close-btn" onclick="closeModal('uploadModal')">×</div>
+            </div>
+            <div class="upload-area" onclick="selectVideo()">
+                <div class="upload-icon">📹</div>
+                <div class="upload-text">ভিডিও সিলেক্ট করতে ট্যাপ করুন</div>
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-input" placeholder="ক্যাপশন লিখুন...">
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-input" placeholder="হ্যাশট্যাগ যোগ করুন...">
+            </div>
+            <button class="btn-primary" onclick="uploadVideo()">পাবলিশ করুন</button>
+        </div>
+    </div>
+
+    <!-- Comments Modal -->
+    <div class="modal" id="commentsModal">
+        <div class="modal-content comments-content">
+            <div class="modal-header">
+                <div class="modal-title">কমেন্ট</div>
+                <div class="close-btn" onclick="closeModal('commentsModal')">×</div>
+            </div>
+            <div class="comments-list" id="commentsList">
+                <!-- Comments will be generated here -->
+            </div>
+            <div class="comment-input-area">
+                <input type="text" class="comment-input" id="commentInput" placeholder="কমেন্ট লিখুন...">
+                <button class="comment-send" onclick="addComment()">পাঠান</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // App State
+        const appState = {
+            currentUser: null,
+            currentVideoIndex: 0,
+            videos: [],
+            notifications: [],
+            darkMode: true
+        };
+
+        // Mock Data
+        const mockVideos = [
+            {
+                id: 1,
+                author: '🎨 ক্রিয়েটর ১',
+                username: '@creator1',
+                caption: 'আমার নতুন ভিডিও দেখুন! 🔥',
+                hashtags: ['#ভাইরাল', '#ট্রেন্ডিং', '#মজার'],
+                music: 'অরিজিনাল সাউন্ড - ক্রিয়েটর ১',
+                likes: 1234,
+                comments: 89,
+                shares: 45,
+                views: 12500,
+                liked: false,
+                following: false
+            },
+            {
+                id: 2,
+                author: '🎭 ক্রিয়েটর ২',
+                username: '@creator2',
+                caption: 'দেখুন এই সুন্দর দৃশ্য 🌅',
+                hashtags: ['#সুন্দর', '#প্রকৃতি'],
+                music: 'ট্রেন্ডিং মিউজিক',
+                likes: 5678,
+                comments: 234,
+                shares: 123,
+                views: 45600,
+                liked: false,
+                following: false
+            },
+            {
+                id: 3,
+                author: '🎤 গায়ক',
+                username: '@singer',
+                caption: 'নতুন গান শুনুন 🎵',
+                hashtags: ['#গান', '#মিউজিক', '#বাংলা'],
+                music: 'অরিজিনাল সাউন্ড - গায়ক',
+                likes: 9876,
+                comments: 456,
+                shares: 234,
+                views: 98700,
+                liked: false,
+                following: true
+            }
+        ];
+
+        const mockNotifications = [
+            { type: 'like', user: '👤 ইউজার ১', text: 'আপনার ভিডিওতে লাইক করেছে', time: '৫ মিনিট আগে' },
+            { type: 'comment', user: '👤 ইউজার ২', text: 'আপনার ভিডিওতে কমেন্ট করেছে', time: '১০ মিনিট আগে' },
+            { type: 'follow', user: '👤 ইউজার ৩', text: 'আপনাকে ফলো করা শুরু করেছে', time: '১ঘন্টা আগে' },
+            { type: 'share', user: '👤 ইউজার ৪', text: 'আপনার ভিডিও শেয়ার করেছে', time: '২ ঘন্টা আগে' }
+        ];
+
+        const mockComments = [
+            { user: '👤 কমেন্টার ১', text: 'অসাধারণ ভিডিও! ❤️', time: '২ মিনিট আগে', likes: 12 },
+            { user: '👤 কমেন্টার ২', text: 'খুব সুন্দর হয়েছে 😍', time: '৫ মিনিট আগে', likes: 8 },
+            { user: '👤 কমেন্টার ৩', text: 'আরো এমন ভিডিও চাই', time: '১০ মিনিট আগে', likes: 5 }
+        ];
+
+        // Initialize App
+        function initApp() {
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('hidden');
+            }, 2000);
+
+            appState.videos = mockVideos;
+            appState.notifications = mockNotifications;
+
+            generateVideoFeed();
+            generateProfileVideos();
+            generateTrendingVideos();
+            generateNotifications();
+            generateReportedVideos();
+        }
+
+        // Auth Functions
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+
+            if (tab === 'login') {
+                document.querySelectorAll('.auth-tab')[0].classList.add('active');
+                document.getElementById('loginForm').classList.add('active');
+            } else {
+                document.querySelectorAll('.auth-tab')[1].classList.add('active');
+                document.getElementById('registerForm').classList.add('active');
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            showToast('লগইন সফল হয়েছে! 🎉');
+            setTimeout(() => {
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('appContainer').classList.add('active');
+            }, 1000);
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            showToast('রেজিস্ট্রেশন সফল হয়েছে! 🎉');
+            setTimeout(() => {
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('appContainer').classList.add('active');
+            }, 1000);
+        }
+
+        function socialLogin(provider) {
+            showToast(`${provider} দিয়ে লগইন হচ্ছে...`);
+            setTimeout(() => {
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('appContainer').classList.add('active');
+            }, 1500);
+        }
+
+        function logout() {
+            if (confirm('আপনি কি লগআউট করতে চান?')) {
+                document.getElementById('appContainer').classList.remove('active');
+                document.getElementById('authScreen').classList.remove('hidden');
+                showToast('লগআউট সফল হয়েছে');
+            }
+        }
+
+        // Generate Video Feed
+        function generateVideoFeed() {
+            const feed = document.getElementById('videoFeed');
+            feed.innerHTML = '';
+
+            appState.videos.forEach((video, index) => {
+                const videoEl = document.createElement('div');
+                videoEl.className = 'video-item';
+                videoEl.innerHTML = `
+                    <div class="video-placeholder">${getVideoIcon(index)}</div>
+                    <div class="video-overlay"></div>
+
+                    <div class="top-bar">
+                        <div class="top-tabs">
+                            <div class="top-tab ${index === 0 ? 'active' : ''}">ফলোয়িং</div>
+                            <div class="top-tab ${index === 1 ? 'active' : ''}">ফর ইউ</div>
+                        </div>
+                        <div class="search-btn" onclick="navigateTo('discover')">🔍</div>
+                    </div>
+
+                    <div class="side-actions">
+                        <div class="action-btn">
+                            <div class="profile-pic">${video.author.split(' ')[0]}</div>
+                            ${!video.following ? '<div class="follow-btn-mini">+</div>' : ''}
+                        </div>
+                        <div class="action-btn" onclick="toggleLike(${video.id})">
+                            <div class="action-icon ${video.liked ? 'liked' : ''}" id="like-${video.id}">
+                                ${video.liked ? '❤️' : '🤍'}
+                            </div>
+                            <div class="action-text" id="likes-${video.id}">${formatNumber(video.likes)}</div>
+                        </div>
+                        <div class="action-btn" onclick="openComments()">
+                            <div class="action-icon">💬</div>
+                            <div class="action-text">${formatNumber(video.comments)}</div>
+                        </div>
+                        <div class="action-btn" onclick="shareVideo(${video.id})">
+                            <div class="action-icon">↗️</div>
+                            <div class="action-text">${formatNumber(video.shares)}</div>
+                        </div>
+                        <div class="action-btn">
+                            <div class="action-icon">⋯</div>
+                        </div>
+                    </div>
+
+                    <div class="video-info">
+                        <div class="video-author">
+                            <span class="author-name">${video.author}</span>
+                            ${!video.following ? '<button class="follow-btn-inline" onclick="followUser('+video.id+')">ফলো করুন</button>' : ''}
+                        </div>
+                        <div class="video-caption">${video.caption}</div>
+                        <div class="video-hashtags">
+                            ${video.hashtags.map(tag => `<span class="hashtag">${tag}</span>`).join(' ')}
+                        </div>
+                        <div class="video-music">
+                            <span class="music-icon">🎵</span>
+                            <span class="music-text">${video.music}</span>
+                        </div>
+                    </div>
+                `;
+                feed.appendChild(videoEl);
+            });
+        }
+
+        function getVideoIcon(index) {
+            const icons = ['🎬', '🎥', '📹', '🎞️', '🎪', '🎭'];
+            return icons[index % icons.length];
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        // Video Actions
+        function toggleLike(videoId) {
+            const video = appState.videos.find(v => v.id === videoId);
+            if (video) {
+                video.liked = !video.liked;
+                video.likes += video.liked ? 1 : -1;
+
+                const icon = document.getElementById(`like-${videoId}`);
+                const count = document.getElementById(`likes-${videoId}`);
+
+                icon.classList.toggle('liked');
+                icon.textContent = video.liked ? '❤️' : '🤍';
+                count.textContent = formatNumber(video.likes);
+
+                if (video.liked) {
+                    showToast('লাইক করা হয়েছে ❤️');
+                }
+            }
+        }
+
+        function followUser(videoId) {
+            const video = appState.videos.find(v => v.id === videoId);
+            if (video) {
+                video.following = true;
+                showToast('ফলো করা হয়েছে ✅');
+                generateVideoFeed();
+            }
+        }
+
+        function shareVideo(videoId) {
+            showToast('শেয়ার অপশন খোলা হচ্ছে...');
+        }
+
+        function openComments() {
+            const modal = document.getElementById('commentsModal');
+            modal.classList.add('active');
+            generateComments();
+        }
+
+        function generateComments() {
+            const list = document.getElementById('commentsList');
+            list.innerHTML = mockComments.map(comment => `
+                <div class="comment-item">
+                    <div class="comment-avatar">${comment.user.split(' ')[0]}</div>
+                    <div class="comment-content">
+                        <div class="comment-author">${comment.user}</div>
+                        <div class="comment-text">${comment.text}</div>
+                        <div class="comment-meta">
+                            <span>${comment.time}</span>
+                            <span class="comment-like">❤️ ${comment.likes}</span>
+                            <span style="cursor: pointer;">রিপ্লাই</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addComment() {
+            const input = document.getElementById('commentInput');
+            if (input.value.trim()) {
+                showToast('কমেন্ট পোস্ট করা হয়েছে ✅');
+                input.value = '';
+                closeModal('commentsModal');
+            }
+        }
+
+        // Profile Functions
+        function generateProfileVideos() {
+            const grid = document.getElementById('profileVideoGrid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < 9; i++) {
+                const video = document.createElement('div');
+                video.className = 'grid-video';
+                video.innerHTML = `
+                    <div class="grid-video-bg">${getVideoIcon(i)}</div>
+                    <div class="grid-video-views">
+                        ▶️ ${formatNumber(Math.floor(Math.random() * 100000))}
+                    </div>
+                `;
+                grid.appendChild(video);
+            }
+        }
+
+        function generateTrendingVideos() {
+            const grid = document.getElementById('trendingVideoGrid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < 12; i++) {
+                const video = document.createElement('div');
+                video.className = 'grid-video';
+                video.innerHTML = `
+                    <div class="grid-video-bg">${getVideoIcon(i)}</div>
+                    <div class="grid-video-views">
+                        ▶️ ${formatNumber(Math.floor(Math.random() * 100000))}
+                    </div>
+                `;
+                grid.appendChild(video);
+            }
+        }
+
+        // Notifications
+        function generateNotifications() {
+            const list = document.getElementById('notificationList');
+            list.innerHTML = appState.notifications.map(notif => `
+                <div class="notification-item">
+                    <div class="notification-avatar">${notif.user.split(' ')[0]}</div>
+                    <div class="notification-content">
+                        <div class="notification-text">
+                            <strong>${notif.user}</strong> ${notif.text}
+                        </div>
+                        <div class="notification-time">${notif.time}</div>
+                    </div>
+                    <div class="notification-action"></div>
+                </div>
+            `).join('');
+        }
+
+        // Admin Functions
+        function generateReportedVideos() {
+            const container = document.getElementById('reportedVideos');
+            container.innerHTML = `
+                <div class="admin-item">
+                    <div class="admin-item-info">
+                        <div class="admin-item-title">রিপোর্টেড ভিডিও #১</div>
+                        <div class="admin-item-meta">রিপোর্ট: অনুপযুক্ত কনটেন্ট | ১ ঘন্টা আগে</div>
+                    </div>
+                    <div class="admin-actions">
+                        <button class="admin-action-btn btn-approve" onclick="approveContent()">অনুমোদন</button>
+                        <button class="admin-action-btn btn-delete" onclick="deleteContent()">ডিলিট</button>
+                    </div>
+                </div>
+                <div class="admin-item">
+                    <div class="admin-item-info">
+                        <div class="admin-item-title">রিপোর্টেড ভিডিও #২</div>
+                        <div class="admin-item-meta">রিপোর্ট: স্প্যাম | ৩ ঘন্টা আগে</div>
+                    </div>
+                    <div class="admin-actions">
+                        <button class="admin-action-btn btn-approve" onclick="approveContent()">অনুমোদন</button>
+                        <button class="admin-action-btn btn-delete" onclick="deleteContent()">ডিলিট</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function approveContent() {
+            showToast('কনটেন্ট অনুমোদিত হয়েছে ✅');
+        }
+
+        function deleteContent() {
+            if (confirm('এই কনটেন্ট ডিলিট করতে চান?')) {
+                showToast('কনটেন্ট ডিলিট করা হয়েছে 🗑️');
+            }
+        }
+
+        // Upload Functions
+        function openUploadModal() {
+            document.getElementById('uploadModal').classList.add('active');
+        }
+
+        function selectVideo() {
+            showToast('ভিডিও সিলেক্ট করা হচ্ছে...');
+        }
+
+        function uploadVideo() {
+            showToast('ভিডিও আপলোড হচ্ছে... ⏳');
+            setTimeout(() => {
+                closeModal('uploadModal');
+                showToast('ভিডিও পাবলিশ হয়েছে! 🎉');
+            }, 2000);
+        }
+
+        // Navigation
+        function navigateTo(page) {
+            // Update bottom nav
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+            // Show selected page
+            if (page === 'home') {
+                document.getElementById('videoFeed').style.display = 'block';
+            } else {
+                document.getElementById('videoFeed').style.display = 'none';
+                if (page === 'profile') {
+                    document.getElementById('profilePage').classList.add('active');
+                } else if (page === 'discover') {
+                    document.getElementById('discoverPage').classList.add('active');
+                } else if (page === 'notifications') {
+                    document.getElementById('notificationsPage').classList.add('active');
+                } else if (page === 'settings') {
+                    document.getElementById('settingsPage').classList.add('active');
+                } else if (page === 'admin') {
+                    document.getElementById('adminPage').classList.add('active');
+                }
+            }
+        }
+
+        function closePage(page) {
+            document.getElementById(page + 'Page').classList.remove('active');
+            if (page !== 'settings' && page !== 'admin') {
+                document.getElementById('videoFeed').style.display = 'block';
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Settings
+        function toggleDarkMode() {
+            const toggle = document.getElementById('darkModeToggle');
+            toggle.classList.toggle('active');
+            document.body.classList.toggle('light-mode');
+            appState.darkMode = !appState.darkMode;
+            showToast(appState.darkMode ? 'ডার্ক মোড চালু করা হয়েছে' : 'লাইট মোড চালু করা হয়েছে');
+        }
+
+        function toggleSetting(element) {
+            element.classList.toggle('active');
+        }
+
+        // Toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Close modals on background click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+
+        // Initialize app on load
+        window.addEventListener('load', initApp);
+    </script>
+</body>
+</html>
